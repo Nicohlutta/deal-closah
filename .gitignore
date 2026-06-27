@@ -12,3 +12,4 @@ data/outreach/*.json
 data/meetings/*.json
 data/decks/
 evals/**/outputs/
+.gstack/
