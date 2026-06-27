@@ -40,10 +40,10 @@ uv run python -m agentkit.evals evals/deck
 
 | Agent | With skill | Without skill | Delta |
 |-------|-----------|--------------|-------|
-| icp-scout    | ?/3 | ?/3 | ? |
-| outreach     | ?/3 | ?/3 | ? |
-| meeting-intel| ?/3 | ?/3 | ? |
-| deck-builder | ?/3 | ?/3 | ? |
+| icp-scout    | 3/3 | 1/3 | **+0.67** |
+| outreach     | 3/3 | 2/3 | **+0.33** *(skill bans "quick call" CTA; base model uses it)* |
+| meeting-intel| TBD | TBD | TBD |
+| deck-builder | TBD | TBD | TBD |
 
 ## 5. Deploy
 ```bash
@@ -56,7 +56,18 @@ python agent.py "Find SaaS companies in Boston with 50-200 employees"
 
 ## 6. Observe
 Each agent run prints: turns, tokens (prompt+completion), cost ($0.00 local), latency (s), tools called.
-*Fill in: one thing a trace taught us during the event.*
+
+Key trace observations:
+- **ICP scout** evaluated import-time env var bug: `OFFLINE = os.getenv(...)` evaluated at module load — fixed with `_use_fixtures()` helper that checks at call time.
+- **Cascade routing**: granite4:micro self-grades 0.90–1.00 on outreach tasks; threshold set to 0.90. `[cascade] resolved locally` appears on most runs, preserving $0 cost.
+- **SerpAPI → fixtures fallback**: `_SERP_LIMIT = 20` rate guard + 2–5s jitter prevents API hammering during demos.
+- **Skill delta on ICP**: without-skill model hallucinated "Adverity" (training knowledge) instead of returning fixture data. With skill, the model follows the workflow and returns only fixture-matched companies.
 
 ## 7. Iterate
-*Fill in after first eval run: what changed, what we'd do with day two.*
+What changed after first eval run:
+- Added `_use_fixtures()` call-time check (was import-time, broke `--offline` flag)
+- Fixed Anthropic compat: `json_object` response_format rejected; now skipped for Anthropic provider
+- Added code-fence stripping in orchestrator classify (Claude returns ` ```json ``` ` without json_mode)
+- Cold-email SKILL.md: added "No-Dump Rule", Stage Calibration, banned CTA "quick call" → drove +0.33 outreach skill delta
+
+Day two priorities: frontier eval run (MODEL_PROVIDER=anthropic) to measure cascade quality uplift, meeting and deck evals.

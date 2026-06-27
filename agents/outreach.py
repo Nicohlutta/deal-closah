@@ -165,8 +165,8 @@ def run(task: str, skill=None) -> AgentResult:
     # Step 2: self-grade — local model rates its own output quality (0.0–1.0)
     confidence, _ = self_grade(task, cheap.text, provider="local")
 
-    # Step 3: escalate to strong tier when confidence is low
-    if confidence < _CASCADE_THRESHOLD:
+    # Step 3: escalate to strong tier when confidence is low (skip in offline mode)
+    if confidence < _CASCADE_THRESHOLD and os.getenv("AGENT_OFFLINE") != "1":
         try:
             strong = run_agent(task, tools=_TOOLS, skill=skill, system=SYSTEM, tier="strong")
             print(

@@ -1,0 +1,227 @@
+{
+  "project": "outreach",
+  "provider": "anthropic",
+  "model_hint": "granite4:micro",
+  "modes": {
+    "with_skill": {
+      "passed": 3,
+      "total": 3,
+      "pass_rate": 1.0,
+      "cost_usd": 0.0,
+      "latency_s_avg": 30.12
+    },
+    "without_skill": {
+      "passed": 2,
+      "total": 3,
+      "pass_rate": 0.67,
+      "cost_usd": 0.0,
+      "latency_s_avg": 26.88
+    }
+  },
+  "results": [
+    {
+      "case": "cold-email-acme",
+      "mode": "with_skill",
+      "pass": true,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Subject:': found"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'I hope this (email|message) finds you': absent (good)"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'My name is': absent (good)"
+        },
+        {
+          "type": "regex",
+          "ok": true,
+          "evidence": "regex '15.min|15 min|fifteen min|15-minute': found"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'quick.{0,20}call': absent (good)"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'I cannot|unable to generate': absent (good)"
+        }
+      ],
+      "cost_usd": 0.0,
+      "latency_s": 35.26,
+      "output_path": "evals/outputs/cold-email-acme-with_skill.md"
+    },
+    {
+      "case": "cold-email-acme",
+      "mode": "without_skill",
+      "pass": false,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Subject:': found"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'I hope this (email|message) finds you': absent (good)"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'My name is': absent (good)"
+        },
+        {
+          "type": "regex",
+          "ok": true,
+          "evidence": "regex '15.min|15 min|fifteen min|15-minute': found"
+        },
+        {
+          "type": "not_regex",
+          "ok": false,
+          "evidence": "forbidden 'quick.{0,20}call': matched 'quick call'"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'I cannot|unable to generate': absent (good)"
+        }
+      ],
+      "cost_usd": 0.0,
+      "latency_s": 30.33,
+      "output_path": "evals/outputs/cold-email-acme-without_skill.md"
+    },
+    {
+      "case": "followup-dataloop",
+      "mode": "with_skill",
+      "pass": true,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Subject:': found"
+        },
+        {
+          "type": "regex",
+          "ok": true,
+          "evidence": "regex 'follow.?up|bump|circling back|checking back': found"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'just checking in$': absent (good)"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'I cannot|unable to': absent (good)"
+        }
+      ],
+      "cost_usd": 0.0,
+      "latency_s": 31.32,
+      "output_path": "evals/outputs/followup-dataloop-with_skill.md"
+    },
+    {
+      "case": "followup-dataloop",
+      "mode": "without_skill",
+      "pass": true,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Subject:': found"
+        },
+        {
+          "type": "regex",
+          "ok": true,
+          "evidence": "regex 'follow.?up|bump|circling back|checking back': found"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'just checking in$': absent (good)"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'I cannot|unable to': absent (good)"
+        }
+      ],
+      "cost_usd": 0.0,
+      "latency_s": 30.45,
+      "output_path": "evals/outputs/followup-dataloop-without_skill.md"
+    },
+    {
+      "case": "event-outreach-marcus",
+      "mode": "with_skill",
+      "pass": true,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Boston Revenue Summit': found"
+        },
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Subject:': found"
+        },
+        {
+          "type": "regex",
+          "ok": true,
+          "evidence": "regex 'coffee|meet|connect|15.min|chat': found"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'I cannot|unable to': absent (good)"
+        }
+      ],
+      "cost_usd": 0.0,
+      "latency_s": 23.77,
+      "output_path": "evals/outputs/event-outreach-marcus-with_skill.md"
+    },
+    {
+      "case": "event-outreach-marcus",
+      "mode": "without_skill",
+      "pass": true,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Boston Revenue Summit': found"
+        },
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Subject:': found"
+        },
+        {
+          "type": "regex",
+          "ok": true,
+          "evidence": "regex 'coffee|meet|connect|15.min|chat': found"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden 'I cannot|unable to': absent (good)"
+        }
+      ],
+      "cost_usd": 0.0,
+      "latency_s": 19.87,
+      "output_path": "evals/outputs/event-outreach-marcus-without_skill.md"
+    }
+  ],
+  "delta": {
+    "pass_rate": 0.33
+  },
+  "partial": false
+}

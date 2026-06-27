@@ -1,0 +1,35 @@
+{
+  "agent": "agent.py::run",
+  "skill": "../../skills/icp-profile",
+  "cases": [
+    {
+      "id": "boston-saas",
+      "input": "Find B2B SaaS companies in Boston with 50-200 employees. Target VP of Sales.",
+      "assertions": [
+        {"type": "contains",       "value": "ICP Search Results"},
+        {"type": "contains",       "value": "Top 3 Picks"},
+        {"type": "contains",       "value": "Caveats"},
+        {"type": "regex",          "value": "\\| \\d+ \\|"},
+        {"type": "not_regex",      "value": "I cannot|I don't have access"}
+      ]
+    },
+    {
+      "id": "fintech-cambridge",
+      "input": "Find fintech companies in Cambridge MA with under 100 employees.",
+      "assertions": [
+        {"type": "contains", "value": "ICP Search Results"},
+        {"type": "contains", "value": "fintech"},
+        {"type": "contains", "value": "Cambridge"}
+      ]
+    },
+    {
+      "id": "logistics-cro",
+      "input": "Search for logistics SaaS companies, decision maker: CRO or Head of Revenue.",
+      "assertions": [
+        {"type": "contains",      "value": "Decision Maker"},
+        {"type": "contains",      "value": "Source"},
+        {"type": "numeric_present"}
+      ]
+    }
+  ]
+}

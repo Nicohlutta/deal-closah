@@ -11,4 +11,4 @@ data/prospects/*.json
 data/outreach/*.json
 data/meetings/*.json
 data/decks/*.json
-evals/**/benchmark.json
+evals/**/outputs/

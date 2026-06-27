@@ -1,0 +1,38 @@
+{
+  "agent": "agent.py::run",
+  "skill": "../../skills/cold-email",
+  "cases": [
+    {
+      "id": "cold-email-acme",
+      "input": "Write a cold email to Acme SaaS Corp, contact Jane Chen VP of Sales. Problem: manual CRM updates waste 2hrs/day. Solution: automated data entry.",
+      "assertions": [
+        {"type": "contains",  "value": "Subject:"},
+        {"type": "not_regex", "value": "I hope this (email|message) finds you"},
+        {"type": "not_regex", "value": "My name is"},
+        {"type": "regex",     "value": "15.min|15 min|fifteen min|15-minute"},
+        {"type": "not_regex", "value": "quick.{0,20}call"},
+        {"type": "not_regex", "value": "I cannot|unable to generate"}
+      ]
+    },
+    {
+      "id": "followup-dataloop",
+      "input": "Write a Day 4 follow-up email to DataLoop AI, contact Priya Patel. No response to first email sent 4 days ago.",
+      "assertions": [
+        {"type": "contains",  "value": "Subject:"},
+        {"type": "regex",     "value": "follow.?up|bump|circling back|checking back"},
+        {"type": "not_regex", "value": "just checking in$"},
+        {"type": "not_regex", "value": "I cannot|unable to"}
+      ]
+    },
+    {
+      "id": "event-outreach-marcus",
+      "input": "Draft event outreach to Marcus Johnson at Beacon Hill Ventures for Boston Revenue Summit on August 14.",
+      "assertions": [
+        {"type": "contains",  "value": "Boston Revenue Summit"},
+        {"type": "contains",  "value": "Subject:"},
+        {"type": "regex",     "value": "coffee|meet|connect|15.min|chat"},
+        {"type": "not_regex", "value": "I cannot|unable to"}
+      ]
+    }
+  ]
+}

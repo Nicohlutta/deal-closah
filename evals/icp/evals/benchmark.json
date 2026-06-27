@@ -1,0 +1,197 @@
+{
+  "project": "icp",
+  "provider": "anthropic",
+  "model_hint": "granite4:micro",
+  "modes": {
+    "with_skill": {
+      "passed": 3,
+      "total": 3,
+      "pass_rate": 1.0,
+      "cost_usd": 0.031248,
+      "latency_s_avg": 7.55
+    },
+    "without_skill": {
+      "passed": 1,
+      "total": 3,
+      "pass_rate": 0.33,
+      "cost_usd": 0.015288,
+      "latency_s_avg": 4.5
+    }
+  },
+  "results": [
+    {
+      "case": "boston-saas",
+      "mode": "with_skill",
+      "pass": true,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'ICP Search Results': found"
+        },
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Top 3 Picks': found"
+        },
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Caveats': found"
+        },
+        {
+          "type": "regex",
+          "ok": true,
+          "evidence": "regex '\\\\| \\\\d+ \\\\|': found"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden \"I cannot|I don't have access\": absent (good)"
+        }
+      ],
+      "cost_usd": 0.007198,
+      "latency_s": 6.44,
+      "output_path": "evals/outputs/boston-saas-with_skill.md"
+    },
+    {
+      "case": "boston-saas",
+      "mode": "without_skill",
+      "pass": false,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": false,
+          "evidence": "substring 'ICP Search Results': NOT found"
+        },
+        {
+          "type": "contains",
+          "ok": false,
+          "evidence": "substring 'Top 3 Picks': NOT found"
+        },
+        {
+          "type": "contains",
+          "ok": false,
+          "evidence": "substring 'Caveats': NOT found"
+        },
+        {
+          "type": "regex",
+          "ok": false,
+          "evidence": "regex '\\\\| \\\\d+ \\\\|': NOT found"
+        },
+        {
+          "type": "not_regex",
+          "ok": true,
+          "evidence": "forbidden \"I cannot|I don't have access\": absent (good)"
+        }
+      ],
+      "cost_usd": 0.005284,
+      "latency_s": 4.4,
+      "output_path": "evals/outputs/boston-saas-without_skill.md"
+    },
+    {
+      "case": "fintech-cambridge",
+      "mode": "with_skill",
+      "pass": true,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'ICP Search Results': found"
+        },
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'fintech': found"
+        },
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Cambridge': found"
+        }
+      ],
+      "cost_usd": 0.009716,
+      "latency_s": 7.04,
+      "output_path": "evals/outputs/fintech-cambridge-with_skill.md"
+    },
+    {
+      "case": "fintech-cambridge",
+      "mode": "without_skill",
+      "pass": false,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": false,
+          "evidence": "substring 'ICP Search Results': NOT found"
+        },
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'fintech': found"
+        },
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Cambridge': found"
+        }
+      ],
+      "cost_usd": 0.004622,
+      "latency_s": 5.41,
+      "output_path": "evals/outputs/fintech-cambridge-without_skill.md"
+    },
+    {
+      "case": "logistics-cro",
+      "mode": "with_skill",
+      "pass": true,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Decision Maker': found"
+        },
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Source': found"
+        },
+        {
+          "type": "numeric_present",
+          "ok": true,
+          "evidence": "number: present"
+        }
+      ],
+      "cost_usd": 0.014334,
+      "latency_s": 9.17,
+      "output_path": "evals/outputs/logistics-cro-with_skill.md"
+    },
+    {
+      "case": "logistics-cro",
+      "mode": "without_skill",
+      "pass": true,
+      "checks": [
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Decision Maker': found"
+        },
+        {
+          "type": "contains",
+          "ok": true,
+          "evidence": "substring 'Source': found"
+        },
+        {
+          "type": "numeric_present",
+          "ok": true,
+          "evidence": "number: present"
+        }
+      ],
+      "cost_usd": 0.005382,
+      "latency_s": 3.7,
+      "output_path": "evals/outputs/logistics-cro-without_skill.md"
+    }
+  ],
+  "delta": {
+    "pass_rate": 0.67
+  },
+  "partial": false
+}
