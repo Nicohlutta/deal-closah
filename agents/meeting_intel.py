@@ -10,6 +10,7 @@ Tools to implement:
 
 from __future__ import annotations
 
+import datetime
 import json
 import os
 from datetime import date
@@ -20,7 +21,7 @@ HERE = Path(__file__).resolve().parent.parent
 import sys
 sys.path.insert(0, str(HERE))
 
-from agentkit import AgentResult, run_agent, tool
+from agentkit import AgentResult, chat, run_agent, tool
 from interfaces import CompanyProfile, MeetingNote, OutreachRecord
 
 OFFLINE = os.getenv("AGENT_OFFLINE", "0") == "1"
@@ -152,3 +153,128 @@ def run(task: str, skill=None) -> AgentResult:
         system=SYSTEM,
         tier="cheap",
     )
+
+
+# ── direct-call functions (orchestrator calls these for explicit commands) ─────
+
+_EXTRACT_PROMPT = """Extract structured intelligence from these raw meeting notes.
+
+Client: {client}
+Date: {meeting_date}
+Raw notes:
+{raw_notes}
+
+Return ONLY valid JSON with these exact keys:
+{{
+  "decisions": ["each key decision made", "..."],
+  "action_items": ["plain phrase, NO numbering — one item per entry", "..."],
+  "next_steps": "the single most important next step",
+  "sentiment": "one line on relationship temperature / buying signals / risks"
+}}
+Extract intent, not transcription. Never invent details that are not in the notes."""
+
+
+def log_meeting(client: str, date: str, raw_notes: str) -> MeetingNote:
+    """Extract decisions, action items, next steps, and sentiment from raw
+    meeting notes using the model, persist the result to data/meetings/, and
+    return the populated MeetingNote.
+
+    Fails soft: if extraction or save fails, the note is still returned with a
+    note about what went wrong — this never raises.
+    """
+    meeting_date = (date or "").strip() or str(datetime.date.today())
+    note = MeetingNote(client=client, date=meeting_date, raw_notes=raw_notes)
+
+    try:
+        result = chat(
+            _EXTRACT_PROMPT.format(
+                client=client, meeting_date=meeting_date, raw_notes=raw_notes
+            ),
+            system=SYSTEM,
+            tier="cheap",
+            json_mode=True,
+        )
+        data = json.loads(result.text)
+        decisions = data.get("decisions") or []
+        items = data.get("action_items") or []
+        note.action_items = [
+            f"{i}. {str(a).strip()}" for i, a in enumerate(items, 1) if str(a).strip()
+        ]
+        note.next_steps = (data.get("next_steps") or "").strip() or None
+        sentiment = (data.get("sentiment") or "").strip()
+        parts = []
+        if decisions:
+            parts.append("Decisions: " + "; ".join(str(d).strip() for d in decisions))
+        if sentiment:
+            parts.append("Sentiment: " + sentiment)
+        note.extracted_insights = "\n".join(parts) or None
+    except Exception as e:  # fail soft — keep the raw note, flag the failure
+        note.extracted_insights = f"(automatic extraction failed: {e})"
+
+    try:
+        (HERE / "data" / "meetings").mkdir(parents=True, exist_ok=True)
+        note.save()
+    except Exception as e:  # save failed — still hand back the populated note
+        note.extracted_insights = (note.extracted_insights or "") + f"\n(save failed: {e})"
+
+    return note
+
+
+_BRIEF_PROMPT = """You are preparing the sales rep to walk into a meeting with {client}.
+
+Everything on record for this client (past meeting notes + outreach history):
+{context}
+
+Write a sharp, sales-focused pre-meeting brief addressed to the rep in the SECOND
+PERSON ("you met with...", "your next step is..."). Use EXACTLY these four
+sections, in this order, and include every section even when data is sparse:
+
+1. Relationship Summary — what has happened so far with this client.
+2. Open Action Items — unresolved items from all past meetings, as a numbered
+   list. Flag anything carried over and still unresolved prominently at the top.
+3. What To Push On Today — specific talking points for the next meeting.
+4. Closing Strategy — concrete moves to advance toward a signed deal.
+
+Keep every point concrete and tactical. No generic filler."""
+
+
+def generate_brief(client: str) -> str:
+    """Assemble all meeting + outreach history for a client and produce a
+    four-section pre-meeting brief as a formatted string.
+
+    Returns a clear message if no history exists. Fails soft: returns an error
+    string instead of raising.
+    """
+    try:
+        meetings = MeetingNote.load_for_client(client)
+    except Exception:
+        meetings = []
+    try:
+        outreach = OutreachRecord.load_for_company(client)
+    except Exception:
+        outreach = []
+
+    if not meetings and not outreach:
+        return (
+            f"No history found for {client}. "
+            "Log a meeting or some outreach for this client first, then I can build a brief."
+        )
+
+    context = json.dumps(
+        {
+            "client": client,
+            "meeting_notes": [n.__dict__ for n in meetings],
+            "outreach_history": [r.__dict__ for r in outreach],
+        },
+        indent=2,
+    )
+
+    try:
+        result = chat(
+            _BRIEF_PROMPT.format(client=client, context=context),
+            system=SYSTEM,
+            tier="cheap",
+        )
+        return result.text
+    except Exception as e:  # fail soft
+        return f"Could not generate a brief for {client}: {e}"
