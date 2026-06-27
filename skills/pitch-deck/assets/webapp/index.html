@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>deal-closah Pitch Creator</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="panel">
+        <div class="topbar">
+          <div>
+            <h1>Pitch Creator</h1>
+            <p>Generate, edit, and export a 7-slide client deck.</p>
+          </div>
+          <button id="generate" class="primary">Generate</button>
+        </div>
+
+        <form id="deckForm" class="grid">
+          <label>Seller company<input name="seller_company" value="Deal Closah"></label>
+          <label>Product name<input name="product_name" value="GTM Agent"></label>
+          <label>Prospect company<input name="prospect_company" value="Acme Robotics"></label>
+          <label>Industry<input name="industry" value="industrial robotics"></label>
+          <label>Company size<input name="company_size" value="200-500 employees"></label>
+          <label>Decision maker role<input name="buyer_role" value="VP Sales"></label>
+          <label class="wide">Problem solved<textarea name="problem_solved">sales teams lose meeting context and need faster client-specific pitch materials</textarea></label>
+          <label class="wide">Meeting notes<textarea name="meeting_notes">They want better follow-up after event meetings; team struggles to personalize decks quickly; asked about rollout effort</textarea></label>
+          <label class="wide">Outreach history<textarea name="outreach_history">Cold email sent; follow-up mentioned upcoming industry event; buyer replied asking for a short demo</textarea></label>
+          <label class="wide">CTA<input name="cta" value="Run a 14-day pilot with 3 sellers"></label>
+        </form>
+
+        <section class="chat">
+          <div class="section-head">
+            <h2>Chat changes</h2>
+            <button id="clear" class="ghost">Clear</button>
+          </div>
+          <div id="log" class="log"></div>
+          <div class="chatbox">
+            <input id="message" placeholder='Try: slide 3 title to "Why delay costs pipeline"'>
+            <button id="send">Send</button>
+          </div>
+        </section>
+      </aside>
+
+      <section class="deck">
+        <div class="toolbar">
+          <div>
+            <h2 id="deckTitle">Draft deck</h2>
+            <p id="meta">Seven-slide meeting pitch deck</p>
+          </div>
+          <button id="pptx" class="primary">Download PPTX</button>
+        </div>
+        <div id="slides" class="slides"></div>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
