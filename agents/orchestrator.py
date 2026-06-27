@@ -1,14 +1,14 @@
 """Orchestrator — hub agent. OWNER: Nicholas.
 
-Parses the user's intent and delegates to the right specialist.
-Never duplicates specialist logic — just routes and assembles.
+Pattern from hack-125/legal-letter-triage:
+  1. classify_intent()  — understand what the user wants
+  2. route()            — delegate to the right specialist
+  3. assemble()         — fold the specialist's result into final_output
 
-Routing map:
-  "find / search / icp / companies / prospects" → icp_scout.run()
-  "email / outreach / message / follow up"      → outreach.run()
-  "meeting / notes / brief / crm / schedule"   → meeting_intel.run()
-  "deck / pitch / slides / presentation"        → deck_builder.run()
-  "event / conference / attend"                 → icp_scout.run_events()
+Each specialist writes to its OWN slot in SalesState (icp_result, outreach_result,
+meeting_result, deck_result) — never another agent's slot. Zero write conflicts.
+
+The orchestrator is the ONLY agent allowed to write: classification, routed_to, final_output.
 """
 
 from __future__ import annotations
@@ -21,109 +21,172 @@ from typing import Optional
 HERE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HERE))
 
-from agentkit import AgentResult, load_skill, run_agent, tool
+from agentkit import chat
+from schemas import Classification, Intent, SalesState, initial_state
 from agents import deck_builder, icp_scout, meeting_intel, outreach
 
 SKILLS_DIR = HERE / "skills"
 
-# ── routing keywords ──────────────────────────────────────────────────────────
+# ── Step 1: classify intent ───────────────────────────────────────────────────
 
-_ICP_KEYWORDS    = {"find", "search", "icp", "companies", "prospect", "target",
-                    "crunchbase", "g2", "filter", "industry", "location"}
-_OUTREACH_KEYS   = {"email", "outreach", "message", "follow", "reach", "write",
-                    "draft", "send", "contact"}
-_MEETING_KEYS    = {"meeting", "notes", "brief", "crm", "schedule", "calendar",
-                    "log", "record", "client"}
-_DECK_KEYS       = {"deck", "pitch", "slides", "presentation", "ppt", "create deck"}
-_EVENT_KEYS      = {"event", "conference", "attend", "linkedin event", "scrape"}
+_CLASSIFY_SYSTEM = """You are a sales assistant router. Given a task, classify the intent.
 
+Intent values:
+- icp       : find companies, search prospects, filter by industry/location/size
+- outreach  : write email, draft message, follow up, event outreach
+- meeting   : log notes, pre-meeting brief, CRM, schedule, client history
+- deck      : pitch deck, slides, presentation, ppt
+- event     : find events, conference, scrape events page
+- crm       : pipeline summary, all prospects, overview
 
-def _route(task: str) -> str:
-    t = task.lower()
-    scores = {
-        "icp":     sum(1 for k in _ICP_KEYWORDS  if k in t),
-        "outreach":sum(1 for k in _OUTREACH_KEYS if k in t),
-        "meeting": sum(1 for k in _MEETING_KEYS  if k in t),
-        "deck":    sum(1 for k in _DECK_KEYS      if k in t),
-        "event":   sum(1 for k in _EVENT_KEYS     if k in t),
-    }
-    return max(scores, key=scores.get)
+Respond ONLY with valid JSON matching:
+{"intent": "<value>", "company_name": "<name or null>", "contact_name": "<name or null>", "confidence": "low|medium|high", "summary": "<one line>"}
+"""
 
 
-# ── routing table (printed after every run) ───────────────────────────────────
-
-def print_routing_table(table: list[dict]):
-    header = f"{'agent':<20} {'model':<20} {'route':<30} {'tok (p+c)':>15} {'$':>10} {'s':>6}"
-    print(f"\n{header}", file=sys.stderr)
-    print("-" * len(header), file=sys.stderr)
-    for row in table:
-        tok = f"{row.get('prompt_tokens',0)}+{row.get('completion_tokens',0)}"
-        print(
-            f"{row['agent']:<20} {row['model']:<20} {row['route']:<30}"
-            f" {tok:>15} {row.get('cost_usd', 0.0):>10.4f} {row.get('latency_s', 0.0):>6.1f}",
-            file=sys.stderr,
-        )
-
-
-# ── main entry points ─────────────────────────────────────────────────────────
-
-def run(task: str, skill=None) -> AgentResult:
-    """Route task to the right specialist and return its result."""
+def classify_intent(state: SalesState) -> SalesState:
+    """Classify the user's intent from the task. Writes to state['classification']."""
     t0 = time.perf_counter()
-    route = _route(task)
-    routing_table = []
+    try:
+        result = chat(
+            messages=[
+                {"role": "system", "content": _CLASSIFY_SYSTEM},
+                {"role": "user", "content": state["task"]},
+            ],
+            response_format={"type": "json_object"},
+        )
+        c = Classification.model_validate_json(result.content)
+        state["classification"] = c.model_dump()
+    except Exception as e:
+        state["errors"].append(f"classify_intent: {e}")
+        state["classification"] = {
+            "intent": "unknown",
+            "company_name": None,
+            "contact_name": None,
+            "confidence": "low",
+            "summary": "Classification failed — defaulting to ICP search.",
+        }
+    state["latencies"]["orchestrator_classify"] = round(time.perf_counter() - t0, 2)
+    state["model_calls"] += 1
+    return state
 
-    if route == "icp":
-        result = icp_scout.run(task, skill=skill or SKILLS_DIR / "icp-profile")
-        routing_table.append({
-            "agent": "icp-scout", "model": "granite4:micro",
-            "route": "local/cheap", **result.usage,
-            "cost_usd": result.cost_usd, "latency_s": result.latency_s,
-        })
 
-    elif route == "event":
-        result = icp_scout.run_events(task, skill=skill or SKILLS_DIR / "event-scout")
-        routing_table.append({
-            "agent": "event-scout", "model": "granite4:micro",
-            "route": "local/cheap", **result.usage,
-            "cost_usd": result.cost_usd, "latency_s": result.latency_s,
-        })
+# ── Step 2: route to specialist ───────────────────────────────────────────────
 
-    elif route == "outreach":
-        result = outreach.run(task, skill=skill or SKILLS_DIR / "cold-email")
-        routing_table.append({
-            "agent": "outreach", "model": "granite4:micro",
-            "route": "local/cheap", **result.usage,
-            "cost_usd": result.cost_usd, "latency_s": result.latency_s,
-        })
+def route(state: SalesState) -> SalesState:
+    """Delegate to the right specialist. Each specialist writes ONLY its own slot."""
+    intent: Intent = (state["classification"] or {}).get("intent", "unknown")
+    state["routed_to"] = intent
+    t0 = time.perf_counter()
 
-    elif route == "meeting":
-        result = meeting_intel.run(task, skill=skill or SKILLS_DIR / "meeting-brief")
-        routing_table.append({
-            "agent": "meeting-intel", "model": "granite4:micro",
-            "route": "local/cheap", **result.usage,
-            "cost_usd": result.cost_usd, "latency_s": result.latency_s,
-        })
+    try:
+        if intent == "icp":
+            result = icp_scout.run(state["task"], skill=SKILLS_DIR / "icp-profile")
+            state["icp_result"] = {"text": result.text, "tool_calls": len(result.tool_calls)}
+            state["model_calls"] += result.turns
 
-    elif route == "deck":
-        # Deck building is judgment-heavy — route to strong tier if available
-        result = deck_builder.run(task, skill=skill or SKILLS_DIR / "pitch-deck")
-        routing_table.append({
-            "agent": "deck-builder", "model": "granite4:micro",
-            "route": "strong→local fallback", **result.usage,
-            "cost_usd": result.cost_usd, "latency_s": result.latency_s,
-        })
+        elif intent == "event":
+            result = icp_scout.run_events(state["task"], skill=SKILLS_DIR / "event-scout")
+            state["icp_result"] = {"text": result.text, "tool_calls": len(result.tool_calls)}
+            state["model_calls"] += result.turns
 
+        elif intent == "outreach":
+            result = outreach.run(state["task"], skill=SKILLS_DIR / "cold-email")
+            state["outreach_result"] = {"text": result.text, "tool_calls": len(result.tool_calls)}
+            state["model_calls"] += result.turns
+
+        elif intent in ("meeting", "crm"):
+            result = meeting_intel.run(state["task"], skill=SKILLS_DIR / "meeting-brief")
+            state["meeting_result"] = {"text": result.text, "tool_calls": len(result.tool_calls)}
+            state["model_calls"] += result.turns
+
+        elif intent == "deck":
+            result = deck_builder.run(state["task"], skill=SKILLS_DIR / "pitch-deck")
+            state["deck_result"] = {"text": result.text, "tool_calls": len(result.tool_calls)}
+            state["model_calls"] += result.turns
+
+        else:
+            state["errors"].append(f"Unknown intent '{intent}' — no agent routed.")
+            result = None
+
+        if result:
+            state["latencies"][intent] = round(time.perf_counter() - t0, 2)
+
+    except Exception as e:
+        state["errors"].append(f"route({intent}): {e}")
+
+    return state
+
+
+# ── Step 3: assemble final output ─────────────────────────────────────────────
+
+def assemble(state: SalesState) -> SalesState:
+    """Fold specialist results into final_output. Orchestrator writes this slot."""
+    intent = state.get("routed_to", "unknown")
+
+    slot_map = {
+        "icp":     state.get("icp_result"),
+        "event":   state.get("icp_result"),
+        "outreach":state.get("outreach_result"),
+        "meeting": state.get("meeting_result"),
+        "crm":     state.get("meeting_result"),
+        "deck":    state.get("deck_result"),
+    }
+    result = slot_map.get(intent)
+
+    if result and result.get("text"):
+        state["final_output"] = result["text"]
+    elif state["errors"]:
+        state["final_output"] = (
+            "One or more agents encountered errors:\n"
+            + "\n".join(f"- {e}" for e in state["errors"])
+        )
     else:
-        # Fallback: run as a generic agent
-        result = run_agent(task, skill=skill)
-        routing_table.append({
-            "agent": "orchestrator", "model": "granite4:micro",
-            "route": "local/default", **result.usage,
-            "cost_usd": result.cost_usd, "latency_s": result.latency_s,
-        })
+        state["final_output"] = "No output produced. Try rephrasing your task."
 
-    # Attach routing table to result (AgentResult is a NamedTuple so we wrap it)
-    result = result._replace() if hasattr(result, "_replace") else result
-    result.__dict__["routing_table"] = routing_table  # type: ignore[attr-defined]
-    return result
+    return state
+
+
+# ── Pipeline entry point ──────────────────────────────────────────────────────
+
+def run_pipeline(task: str) -> SalesState:
+    """Full pipeline: classify → route → assemble. Returns the final SalesState."""
+    state = initial_state(task)
+    state = classify_intent(state)
+    state = route(state)
+    state = assemble(state)
+    return state
+
+
+# ── Routing table printer (for CLI output) ───────────────────────────────────
+
+def print_routing_table(state: SalesState):
+    rows = [
+        ("step", "latency (s)", "model calls"),
+        *[(k, f"{v:.2f}", "") for k, v in state["latencies"].items()],
+        ("TOTAL model calls", "", str(state["model_calls"])),
+    ]
+    col_w = [max(len(r[i]) for r in rows) for i in range(3)]
+    print(file=sys.stderr)
+    for row in rows:
+        print("  ".join(r.ljust(col_w[i]) for i, r in enumerate(row)), file=sys.stderr)
+    if state["errors"]:
+        print(f"\nErrors: {state['errors']}", file=sys.stderr)
+
+
+# ── Legacy run() kept for agentkit.evals compatibility ───────────────────────
+
+def run(task: str, skill=None):
+    """Thin wrapper so agentkit.evals can call run(task, skill) on the orchestrator."""
+    from agentkit import AgentResult
+    state = run_pipeline(task)
+    # Wrap in AgentResult shape so evals engine works unchanged
+    return AgentResult(
+        text=state["final_output"] or "",
+        turns=state["model_calls"],
+        tool_calls=[],
+        usage={"prompt_tokens": 0, "completion_tokens": 0},
+        cost_usd=0.0,
+        latency_s=sum(state["latencies"].values()),
+        messages=[],
+    )
