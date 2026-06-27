@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>deal-closah</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Main navigation">
+        <div class="brand">
+          <div class="brand-mark">dc</div>
+          <div>
+            <div class="brand-name">deal-closah</div>
+            <div class="brand-subtitle">Sales command center</div>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Workspace views">
+          <button class="nav-item is-active" type="button" data-view="command" aria-label="Command center">
+            <span class="nav-icon">⌘</span>
+            <span>Command</span>
+          </button>
+          <button class="nav-item" type="button" data-view="prospects" aria-label="Prospects">
+            <span class="nav-icon">□</span>
+            <span>Prospects</span>
+          </button>
+          <button class="nav-item" type="button" data-view="outreach" aria-label="Outreach">
+            <span class="nav-icon">✉</span>
+            <span>Outreach</span>
+          </button>
+          <button class="nav-item" type="button" data-view="meetings" aria-label="Meetings and decks">
+            <span class="nav-icon">▤</span>
+            <span>Meetings</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="run-mode">
+            <span class="status-dot"></span>
+            Offline demo
+          </div>
+          <div class="small-copy">Ready for API wiring</div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Lane 3 GTM agents</p>
+            <h1 id="viewTitle">Command Center</h1>
+          </div>
+          <div class="topbar-actions">
+            <label class="search-box">
+              <span>Search</span>
+              <input id="globalSearch" type="search" placeholder="Company, contact, status" />
+            </label>
+            <button class="icon-button" id="refreshData" type="button" aria-label="Refresh data" title="Refresh data">↻</button>
+          </div>
+        </header>
+
+        <section class="view is-visible" id="commandView" data-title="Command Center">
+          <div class="metrics-grid">
+            <article class="metric-card">
+              <span class="metric-label">Prospects</span>
+              <strong id="metricProspects">0</strong>
+              <span class="metric-note">ICP matches</span>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Follow-ups</span>
+              <strong id="metricFollowups">0</strong>
+              <span class="metric-note">Need review</span>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Meetings</span>
+              <strong id="metricMeetings">0</strong>
+              <span class="metric-note">Logged notes</span>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Decks</span>
+              <strong id="metricDecks">0</strong>
+              <span class="metric-note">Drafted assets</span>
+            </article>
+          </div>
+
+          <div class="command-layout">
+            <section class="task-panel" aria-labelledby="taskHeading">
+              <div class="section-header">
+                <div>
+                  <p class="eyebrow">Run a task</p>
+                  <h2 id="taskHeading">Agent request</h2>
+                </div>
+                <div class="segmented" role="group" aria-label="Run mode">
+                  <button class="is-selected" type="button" data-mode="offline">Offline</button>
+                  <button type="button" data-mode="api">API</button>
+                </div>
+              </div>
+
+              <textarea id="taskInput" rows="5">Find B2B SaaS companies in Boston, 50-200 employees, target VP Sales</textarea>
+              <div class="task-actions">
+                <button class="primary-button" id="runTask" type="button">Run agent</button>
+                <button class="secondary-button" id="clearTask" type="button">Clear</button>
+              </div>
+
+              <div class="prompt-row" aria-label="Example tasks">
+                <button type="button" data-prompt="Write a cold email to Acme Corp, contact Jane Chen">Cold email</button>
+                <button type="button" data-prompt="Generate pre-meeting brief for Meridian Ledger">Meeting brief</button>
+                <button type="button" data-prompt="Build a pitch deck for Northstar Revenue">Pitch deck</button>
+              </div>
+            </section>
+
+            <aside class="trace-panel" aria-label="Agent trace">
+              <div class="section-header compact">
+                <div>
+                  <p class="eyebrow">Trace</p>
+                  <h2>Route</h2>
+                </div>
+                <span class="pill" id="traceIntent">icp</span>
+              </div>
+              <ol class="trace-list" id="traceList"></ol>
+            </aside>
+          </div>
+
+          <section class="result-panel" aria-labelledby="resultHeading">
+            <div class="section-header">
+              <div>
+                <p class="eyebrow">Output</p>
+                <h2 id="resultHeading">Agent response</h2>
+              </div>
+              <span class="pill muted" id="resultStatus">Idle</span>
+            </div>
+            <div class="result-body" id="resultBody"></div>
+          </section>
+        </section>
+
+        <section class="view" id="prospectsView" data-title="Prospects">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">ICP pipeline</p>
+              <h2>Companies</h2>
+            </div>
+            <div class="filter-row">
+              <select id="industryFilter" aria-label="Filter by industry">
+                <option value="all">All industries</option>
+              </select>
+              <select id="sourceFilter" aria-label="Filter by source">
+                <option value="all">All sources</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  <th>Industry</th>
+                  <th>Size</th>
+                  <th>Location</th>
+                  <th>Decision maker</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody id="prospectRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="outreachView" data-title="Outreach">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Human review queue</p>
+              <h2>Messages</h2>
+            </div>
+            <div class="segmented" role="group" aria-label="Outreach status">
+              <button class="is-selected" type="button" data-status="all">All</button>
+              <button type="button" data-status="drafted">Drafts</button>
+              <button type="button" data-status="followed_up">Follow-ups</button>
+            </div>
+          </div>
+          <div class="outreach-grid" id="outreachCards"></div>
+        </section>
+
+        <section class="view" id="meetingsView" data-title="Meetings & Decks">
+          <div class="meeting-layout">
+            <section>
+              <div class="section-header">
+                <div>
+                  <p class="eyebrow">Client history</p>
+                  <h2>Meeting timeline</h2>
+                </div>
+              </div>
+              <div class="timeline" id="meetingTimeline"></div>
+            </section>
+
+            <aside class="deck-panel" aria-label="Latest deck">
+              <div class="section-header compact">
+                <div>
+                  <p class="eyebrow">Pitch assets</p>
+                  <h2>Deck preview</h2>
+                </div>
+              </div>
+              <div id="deckPreview"></div>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
