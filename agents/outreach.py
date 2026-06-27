@@ -21,10 +21,14 @@ HERE = Path(__file__).resolve().parent.parent
 import sys
 sys.path.insert(0, str(HERE))
 
-from agentkit import AgentResult, run_agent, tool
+from agentkit import AgentResult, run_agent, self_grade, tool
 from interfaces import CompanyProfile, OutreachRecord
 
-OFFLINE = os.getenv("AGENT_OFFLINE", "0") == "1"
+# Cascade: granite4:micro answers first; escalates to strong tier if self-confidence
+# falls below this threshold. Cold email tone/quality is the sensitive dimension here.
+# granite4:micro self-grades 0.90–1.00 on most tasks, so set threshold above 0.92
+# to see real escalation on complex drafts. Override with CASCADE_THRESHOLD env var.
+_CASCADE_THRESHOLD = float(os.getenv("CASCADE_THRESHOLD", "0.93"))
 
 SYSTEM = """You are an Outreach specialist — an expert sales development rep (SDR).
 You write personalized, concise outreach emails that lead with the prospect's
@@ -133,21 +137,52 @@ def save_outreach_record(company_name: str, contact_name: str, channel: str,
     return f"Saved outreach record for {company_name} / {contact_name}"
 
 
-# ── agent entry point ─────────────────────────────────────────────────────────
+# ── agent entry point (cascade) ───────────────────────────────────────────────
+
+_TOOLS = [
+    load_prospect,
+    load_outreach_history,
+    draft_cold_email,
+    draft_follow_up,
+    draft_event_outreach,
+    save_outreach_record,
+]
+
 
 def run(task: str, skill=None) -> AgentResult:
-    """Draft outreach emails and follow-ups based on the task."""
-    return run_agent(
-        task,
-        tools=[
-            load_prospect,
-            load_outreach_history,
-            draft_cold_email,
-            draft_follow_up,
-            draft_event_outreach,
-            save_outreach_record,
-        ],
-        skill=skill,
-        system=SYSTEM,
-        tier="cheap",
+    """Draft outreach with cascade: granite4:micro first, escalate if quality is low.
+
+    Cold email tone is the most quality-sensitive task in the pipeline. Cascade
+    lets granite4 handle simple follow-up bumps for $0; complex initial drafts
+    that need the No-Dump Rule and Stage Calibration escalate to the strong tier.
+    """
+    # Step 1: always try cheap local first (granite4:micro — $0, private, fast)
+    cheap = run_agent(
+        task, tools=_TOOLS, skill=skill, system=SYSTEM,
+        provider="local", tier="default",
     )
+
+    # Step 2: self-grade — local model rates its own output quality (0.0–1.0)
+    confidence, _ = self_grade(task, cheap.text, provider="local")
+
+    # Step 3: escalate to strong tier when confidence is low
+    if confidence < _CASCADE_THRESHOLD:
+        try:
+            strong = run_agent(task, tools=_TOOLS, skill=skill, system=SYSTEM, tier="strong")
+            print(
+                f"  [cascade] granite4:micro → strong (confidence {confidence:.2f} < {_CASCADE_THRESHOLD})",
+                file=sys.stderr,
+            )
+            return strong
+        except Exception as e:
+            print(
+                f"  [cascade] escalation unavailable ({type(e).__name__}) — staying local",
+                file=sys.stderr,
+            )
+    else:
+        print(
+            f"  [cascade] resolved locally — confidence {confidence:.2f} >= {_CASCADE_THRESHOLD}",
+            file=sys.stderr,
+        )
+
+    return cheap

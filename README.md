@@ -11,8 +11,8 @@ A hub-and-spoke sales intelligence system: find your ideal customers, write pers
 | Agent | Owner | Does |
 |-------|-------|------|
 | `orchestrator` | Nicholas | Routes tasks to the right specialist |
-| `icp_scout` | Teammate 1 | Finds companies (Crunchbase/G2), events, decision makers |
-| `outreach` | Teammate 2 | Drafts cold emails, follow-ups, event outreach |
+| `icp_scout` | Nicholas | Finds companies (SerpAPI/Google), events, decision makers |
+| `outreach` | Nicholas | Drafts cold emails, follow-ups, event outreach |
 | `meeting_intel` | Deepthi | Logs meeting notes, generates pre-meeting briefs, CRM |
 | `deck_builder` | Arman | Builds 7-slide pitch decks |
 
@@ -20,9 +20,9 @@ A hub-and-spoke sales intelligence system: find your ideal customers, write pers
 
 | Skill | Owner | Validates |
 |-------|-------|-----------|
-| `icp-profile` | Teammate 1 | ICP search output format |
-| `event-scout` | Teammate 1 | Event finding + pre-event outreach |
-| `cold-email` | Teammate 2 | Problem/solution email framework |
+| `icp-profile` | Nicholas | ICP search output format |
+| `event-scout` | Nicholas | Event finding + pre-event outreach |
+| `cold-email` | Nicholas | Awareness-stage outreach framework (No-Dump Rule) |
 | `meeting-brief` | Deepthi | Pre-meeting brief + notes extraction |
 | `pitch-deck` | Arman | 7-slide deck structure |
 
@@ -105,7 +105,7 @@ uv run python -m agentkit.evals evals/deck
 - **Model framework:** agentkit (vendored, 4 modules, ~450 lines)
 - **Local model:** granite4:micro via Ollama (zero cost, fully offline)
 - **Frontier (optional):** Claude Sonnet 4.6 / Opus 4.8 via `MODEL_PROVIDER=anthropic`
-- **Data sources:** Crunchbase API, G2 (scrape), Hunter.io (emails), Eventbrite API
+- **Data sources:** SerpAPI (Google search, 100 free/mo), Hunter.io (email verify, 25/mo free)
 - **Storage:** JSON files in `data/` (no database dependency)
 - **Language:** Python 3.11+, managed by uv
 
