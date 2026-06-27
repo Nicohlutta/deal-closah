@@ -13,8 +13,8 @@ A hub-and-spoke sales intelligence system: find your ideal customers, write pers
 | `orchestrator` | Nicholas | Routes tasks to the right specialist |
 | `icp_scout` | Teammate 1 | Finds companies (Crunchbase/G2), events, decision makers |
 | `outreach` | Teammate 2 | Drafts cold emails, follow-ups, event outreach |
-| `meeting_intel` | Teammate 3 | Logs meeting notes, generates pre-meeting briefs, CRM |
-| `deck_builder` | Teammate 4 | Builds 7-slide pitch decks |
+| `meeting_intel` | Deepthi | Logs meeting notes, generates pre-meeting briefs, CRM |
+| `deck_builder` | Arman | Builds 7-slide pitch decks |
 
 ## Skills
 
@@ -23,8 +23,8 @@ A hub-and-spoke sales intelligence system: find your ideal customers, write pers
 | `icp-profile` | Teammate 1 | ICP search output format |
 | `event-scout` | Teammate 1 | Event finding + pre-event outreach |
 | `cold-email` | Teammate 2 | Problem/solution email framework |
-| `meeting-brief` | Teammate 3 | Pre-meeting brief + notes extraction |
-| `pitch-deck` | Teammate 4 | 7-slide deck structure |
+| `meeting-brief` | Deepthi | Pre-meeting brief + notes extraction |
+| `pitch-deck` | Arman | 7-slide deck structure |
 
 ## Quick start
 
@@ -86,8 +86,8 @@ Each teammate owns exactly one agent file and their skill directories:
 | `agents/orchestrator.py` | Nicholas |
 | `agents/icp_scout.py` + `skills/icp-profile/` + `skills/event-scout/` | Teammate 1 |
 | `agents/outreach.py` + `skills/cold-email/` | Teammate 2 |
-| `agents/meeting_intel.py` + `skills/meeting-brief/` | Teammate 3 |
-| `agents/deck_builder.py` + `skills/pitch-deck/` | Teammate 4 |
+| `agents/meeting_intel.py` + `skills/meeting-brief/` | Deepthi |
+| `agents/deck_builder.py` + `skills/pitch-deck/` | Arman |
 | `interfaces.py`, `agent.py`, `docs/` | Nicholas (shared) |
 
 ## Run evals
