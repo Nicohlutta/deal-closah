@@ -1,0 +1,47 @@
+[
+  {
+    "name": "SaaStr Annual 2026",
+    "date": "2026-09-09",
+    "location": "San Jose, CA",
+    "type": "Conference",
+    "attendee_profile": "B2B SaaS founders, VPs, and enterprise buyers (1,000-500 employees)",
+    "url": "https://saastr.com/annual",
+    "registration_open": true
+  },
+  {
+    "name": "Boston Revenue Summit",
+    "date": "2026-08-14",
+    "location": "Boston, MA",
+    "type": "Regional Conference",
+    "attendee_profile": "Sales leaders and RevOps professionals in New England",
+    "url": "https://bostonrevenuesummit.com",
+    "registration_open": true
+  },
+  {
+    "name": "Fintech Connect Boston",
+    "date": "2026-07-22",
+    "location": "Boston, MA",
+    "type": "Industry Meetup",
+    "attendee_profile": "Fintech founders, CTOs, and payments executives",
+    "url": "https://fintechconnect.io/boston",
+    "registration_open": true
+  },
+  {
+    "name": "HubSpot INBOUND 2026",
+    "date": "2026-09-03",
+    "location": "Boston, MA",
+    "type": "Marketing/Sales Conference",
+    "attendee_profile": "Marketing, sales, and RevOps leaders at growth-stage companies",
+    "url": "https://inbound.com",
+    "registration_open": false
+  },
+  {
+    "name": "MIT Sloan Sales Conference",
+    "date": "2026-10-05",
+    "location": "Cambridge, MA",
+    "type": "Academic/Industry",
+    "attendee_profile": "Sales leaders, VCs, and enterprise decision makers",
+    "url": "https://mitsloan.mit.edu/sales-conference",
+    "registration_open": true
+  }
+]

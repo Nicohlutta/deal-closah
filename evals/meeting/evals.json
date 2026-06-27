@@ -1,0 +1,32 @@
+{
+  "agent": "agents/meeting_intel.py::run",
+  "skill": "skills/meeting-brief",
+  "cases": [
+    {
+      "task": "Generate pre-meeting brief for Acme SaaS Corp. Meeting is tomorrow.",
+      "assertions": [
+        {"type": "contains",     "value": "Pre-Meeting Brief"},
+        {"type": "contains",     "value": "Situation"},
+        {"type": "contains",     "value": "Closing Angle"},
+        {"type": "contains",     "value": "Agenda Suggestion"},
+        {"type": "not_regex",    "pattern": "I cannot|no information available"}
+      ]
+    },
+    {
+      "task": "Log meeting notes for Beacon Hill Ventures, date 2026-06-27: Met with Marcus. He likes the product but worried about implementation time. Wants to see a timeline. His budget is $5k/mo.",
+      "assertions": [
+        {"type": "contains",     "value": "Decisions Made"},
+        {"type": "contains",     "value": "Action Items"},
+        {"type": "contains",     "value": "Next Step"},
+        {"type": "contains",     "value": "Sentiment"}
+      ]
+    },
+    {
+      "task": "Show me the CRM pipeline summary.",
+      "assertions": [
+        {"type": "not_regex",    "pattern": "ERROR|exception"},
+        {"type": "contains",     "value": "company"}
+      ]
+    }
+  ]
+}

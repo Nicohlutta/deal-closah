@@ -1,0 +1,33 @@
+{
+  "agent": "agents/deck_builder.py::run",
+  "skill": "skills/pitch-deck",
+  "cases": [
+    {
+      "task": "Build a pitch deck for Acme SaaS Corp meeting next week.",
+      "assertions": [
+        {"type": "contains",     "value": "Slide 1"},
+        {"type": "contains",     "value": "Slide 2"},
+        {"type": "contains",     "value": "Slide 7"},
+        {"type": "contains",     "value": "Their Problem"},
+        {"type": "contains",     "value": "CTA"},
+        {"type": "not_regex",    "pattern": "I cannot create|unable to generate"}
+      ]
+    },
+    {
+      "task": "Create a pitch presentation for DataLoop AI focused on their data quality problem.",
+      "assertions": [
+        {"type": "contains",     "value": "Problem"},
+        {"type": "contains",     "value": "Solution"},
+        {"type": "contains",     "value": "Pricing"}
+      ]
+    },
+    {
+      "task": "Generate a 7-slide deck for Beacon Hill Ventures. Focus on implementation timeline concerns.",
+      "assertions": [
+        {"type": "contains",     "value": "Slide"},
+        {"type": "regex",        "pattern": "timeline|implementation|Timeline|Implementation"},
+        {"type": "contains",     "value": "CTA"}
+      ]
+    }
+  ]
+}

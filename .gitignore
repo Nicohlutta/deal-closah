@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.local
+*.egg-info/
+dist/
+.DS_Store
+data/prospects/*.json
+data/outreach/*.json
+data/meetings/*.json
+data/decks/*.json
+evals/**/benchmark.json

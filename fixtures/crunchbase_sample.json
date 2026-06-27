@@ -1,0 +1,67 @@
+[
+  {
+    "name": "Acme SaaS Corp",
+    "industry": "B2B SaaS",
+    "size": "50-100 employees",
+    "location": "Boston, MA",
+    "website": "https://acmesaas.com",
+    "email": null,
+    "decision_maker": "Sarah Chen",
+    "decision_maker_title": "VP of Sales",
+    "linkedin_url": "https://linkedin.com/company/acme-saas-corp",
+    "description": "Sales automation platform for mid-market B2B companies.",
+    "source": "crunchbase"
+  },
+  {
+    "name": "Beacon Hill Ventures",
+    "industry": "Fintech",
+    "size": "100-200 employees",
+    "location": "Boston, MA",
+    "website": "https://beaconhillventures.io",
+    "email": null,
+    "decision_maker": "Marcus Johnson",
+    "decision_maker_title": "CRO",
+    "linkedin_url": "https://linkedin.com/company/beacon-hill-ventures",
+    "description": "B2B payments infrastructure for SMBs.",
+    "source": "crunchbase"
+  },
+  {
+    "name": "DataLoop AI",
+    "industry": "AI/ML Tools",
+    "size": "20-50 employees",
+    "location": "Cambridge, MA",
+    "website": "https://dataloopai.com",
+    "email": null,
+    "decision_maker": "Priya Patel",
+    "decision_maker_title": "CEO & Co-Founder",
+    "linkedin_url": "https://linkedin.com/company/dataloop-ai",
+    "description": "Data labeling platform for enterprise ML teams.",
+    "source": "crunchbase"
+  },
+  {
+    "name": "HarborTech Solutions",
+    "industry": "Logistics SaaS",
+    "size": "200-500 employees",
+    "location": "South Boston, MA",
+    "website": "https://harbortech.io",
+    "email": null,
+    "decision_maker": "Tom O'Brien",
+    "decision_maker_title": "Head of Revenue",
+    "linkedin_url": "https://linkedin.com/company/harbortech-solutions",
+    "description": "Supply chain visibility platform for maritime logistics.",
+    "source": "g2"
+  },
+  {
+    "name": "RevStack Inc",
+    "industry": "Revenue Operations",
+    "size": "10-50 employees",
+    "location": "Somerville, MA",
+    "website": "https://revstack.co",
+    "email": null,
+    "decision_maker": "Alex Rivera",
+    "decision_maker_title": "Founder",
+    "linkedin_url": "https://linkedin.com/company/revstack-inc",
+    "description": "RevOps automation for early-stage B2B startups.",
+    "source": "crunchbase"
+  }
+]
