@@ -18,8 +18,11 @@ now, and the strategic angle to lock in the next step with the client.
 
 - Pre-meeting brief covers: last 3 meetings + all outreach history.
 - Action items are always assigned to a named person (not "we" or "the team").
+- Action items are always written as a numbered list, never prose or bullets.
 - Pre-brief includes one "closing angle" — the single most important thing to accomplish.
 - Meeting notes are saved immediately after extraction, before generating any output.
+- Pre-meeting briefs are written in the second person ("you met with...", "your next step is...").
+- Keep the tone sharp and sales-focused — concrete next moves and angles, never generic filler.
 
 ## Workflow
 
@@ -32,6 +35,11 @@ now, and the strategic angle to lock in the next step with the client.
 
 - Raw notes are messy — extract intent, not transcription.
 - If action items lack owners, flag them explicitly ("unassigned — assign before next call").
+- Always include all four core brief sections even when data is sparse — never drop one:
+  Relationship Summary (Situation), Open Action Items (Open Items), What To Push On Today
+  (Agenda Suggestion), and Closing Strategy (Closing Angle).
+- Flag unresolved action items carried over from previous meetings prominently at the top of
+  the Open Action Items / Open Items section — do not bury a stale commitment in the list.
 - Pre-meeting brief is NOT a summary of past meetings — it's a strategy doc for the NEXT meeting.
 - Never fabricate a meeting detail that wasn't in the notes.
 - If meeting history is empty, generate a first-meeting brief using only the company profile.
