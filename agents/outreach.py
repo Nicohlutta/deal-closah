@@ -24,8 +24,6 @@ sys.path.insert(0, str(HERE))
 from agentkit import AgentResult, run_agent, tool
 from interfaces import CompanyProfile, OutreachRecord
 
-OFFLINE = os.getenv("AGENT_OFFLINE", "0") == "1"
-
 SYSTEM = """You are an Outreach specialist — an expert sales development rep (SDR).
 You write personalized, concise outreach emails that lead with the prospect's
 problem (not your product), offer a clear solution, and end with a single CTA.
@@ -149,5 +147,5 @@ def run(task: str, skill=None) -> AgentResult:
         ],
         skill=skill,
         system=SYSTEM,
-        tier="cheap",
+        tier="strong",  # email copy is quality-sensitive; use best available model
     )
