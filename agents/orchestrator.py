@@ -13,6 +13,7 @@ The orchestrator is the ONLY agent allowed to write: classification, routed_to, 
 
 from __future__ import annotations
 
+import re
 import sys
 import time
 from pathlib import Path
@@ -75,8 +76,76 @@ def classify_intent(state: SalesState) -> SalesState:
 
 # ── Step 2: route to specialist ───────────────────────────────────────────────
 
+# ── meeting_intel keyword fast-path (added) ──────────────────────────────────
+
+def _parse_client(text: str) -> str:
+    """Best-effort client name: the text after 'for', minus any date/trailing words."""
+    m = re.search(r"\bfor\s+(.+)", text, re.I)
+    seg = m.group(1) if m else text
+    seg = re.sub(r"\d{4}-\d{2}-\d{2}", "", seg)                       # drop ISO date
+    seg = re.sub(r"\b(on|dated|date)\b\s*$", "", seg.strip(), flags=re.I)
+    return seg.strip(" ,.-:").strip()
+
+
+def _parse_meeting_log(task: str) -> tuple[str, str, str]:
+    """Pull (client, date, raw_notes) out of a 'log meeting' task string.
+
+    Everything after the first colon is treated as the raw notes.
+    """
+    head, _, raw_notes = task.partition(":")
+    date_m = re.search(r"\d{4}-\d{2}-\d{2}", head)
+    meeting_date = date_m.group(0) if date_m else ""
+    return _parse_client(head), meeting_date, raw_notes.strip()
+
+
+def _route_meeting_keywords(state: SalesState) -> bool:
+    """Intercept explicit meeting commands and call meeting_intel directly.
+
+    Returns True if it handled the task (writes meeting_result + routing),
+    False to let the normal classifier-based routing run.
+    """
+    task = state["task"]
+    low = task.lower()
+    is_log = ("log meeting" in low) or ("meeting notes" in low)
+    is_brief = (
+        ("pre-meeting brief" in low)
+        or ("brief for" in low)
+        or ("generate brief" in low)
+    )
+    if not (is_log or is_brief):
+        return False
+
+    t0 = time.perf_counter()
+    state["routed_to"] = "meeting"
+    try:
+        if is_log:
+            client, meeting_date, raw_notes = _parse_meeting_log(task)
+            note = meeting_intel.log_meeting(client, meeting_date, raw_notes)
+            lines = [f"Meeting logged for {note.client} ({note.date})."]
+            if note.extracted_insights:
+                lines.append("\n" + note.extracted_insights)
+            if note.action_items:
+                lines.append("\nAction items:\n" + "\n".join(note.action_items))
+            if note.next_steps:
+                lines.append("\nNext step: " + note.next_steps)
+            text = "\n".join(lines)
+        else:
+            text = meeting_intel.generate_brief(_parse_client(task))
+        state["meeting_result"] = {"text": text, "tool_calls": 0}
+        state["model_calls"] += 1
+        state["latencies"]["meeting"] = round(time.perf_counter() - t0, 2)
+    except Exception as e:  # fail soft — assemble() surfaces errors
+        state["errors"].append(f"route_meeting_keywords: {e}")
+    return True
+
+
 def route(state: SalesState) -> SalesState:
     """Delegate to the right specialist. Each specialist writes ONLY its own slot."""
+    # Explicit meeting commands bypass the classifier and call meeting_intel
+    # directly (added for meeting_intel keyword fast-path).
+    if _route_meeting_keywords(state):
+        return state
+
     intent: Intent = (state["classification"] or {}).get("intent", "unknown")
     state["routed_to"] = intent
     t0 = time.perf_counter()
