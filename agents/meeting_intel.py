@@ -13,6 +13,7 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import re
 from datetime import date
 from pathlib import Path
 
@@ -194,7 +195,8 @@ def log_meeting(client: str, date: str, raw_notes: str) -> MeetingNote:
             tier="cheap",
             json_mode=True,
         )
-        data = json.loads(result.text)
+        raw = re.sub(r"```(?:json)?\s*|\s*```", "", result.text).strip()
+        data = json.loads(raw)
         decisions = data.get("decisions") or []
         items = data.get("action_items") or []
         note.action_items = [
