@@ -89,6 +89,7 @@ Each teammate owns exactly one agent file and their skill directories:
 | `agents/meeting_intel.py` + `skills/meeting-brief/` | Deepthi |
 | `agents/deck_builder.py` + `skills/pitch-deck/` | Arman |
 | `interfaces.py`, `agent.py`, `docs/` | Nicholas (shared) |
+| `app/` (frontend — 4-page web UI) | Jon Paul |
 
 ## Run evals
 
