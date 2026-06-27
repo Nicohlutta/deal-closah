@@ -1,37 +1,45 @@
 # Model Selection — deal-closah
 
-## Routing strategy: upfront task-type routing
+## Routing strategy: hybrid (upfront routing + cascade where it matters)
 
-deal-closah uses **upfront routing** (not cascading): the orchestrator classifies
-intent first, then each specialist picks its tier based on what the task requires
-— cheap for structured extraction, strong for creative synthesis and complex
-instruction-following.
+deal-closah uses **two routing strategies** combined:
 
-This avoids the self-grading overhead of cascade while putting the right model
-on the right job. Task difficulty is predictable at routing time (the intent
-label tells you everything), so cascading would mostly pay for a self-grade call
-that never triggers an escalation.
+- **Upfront routing** for agents where task difficulty is predictable from the intent
+  label — ICP search and classification are always structured extraction; local is fine.
+- **Cascade** for the outreach agent, where quality is the sensitive dimension:
+  granite4:micro answers first, self-grades its confidence, and escalates to the
+  strong tier only when confidence falls below the threshold. This delivers $0 cost
+  for simple follow-up bumps and frontier quality for complex initial cold emails.
 
 ## Who does what
 
-| Agent / Step | Tier | Local model | Frontier (if key set) | Why |
+| Agent / Step | Strategy | Local model | Frontier (if key set) | Why |
 |---|---|---|---|---|
-| `orchestrator.classify_intent` | cheap | granite4:micro | claude-haiku-4-5 | JSON classification into 6 intents — templated, well-scoped; haiku handles it |
-| `icp_scout` (search + format) | cheap | granite4:micro | claude-haiku-4-5 | Formats SerpAPI results into a company table — structured extraction, not judgment |
-| `outreach` (cold email drafting) | **strong** | granite4:micro | **claude-opus-4-8** | Email copy is tone-sensitive; No-Dump Rule and Stage Calibration require strong instruction-following; wrong model = bad emails |
-| `meeting_intel` (Deepthi) | cheap | granite4:micro | claude-haiku-4-5 | Parsing meeting notes into structured CRM records — templated extraction |
-| `deck_builder` (Arman) | strong | granite4:micro | claude-opus-4-8 | 7-slide narrative requires creative synthesis and slide-by-slide judgment |
+| `orchestrator.classify_intent` | upfront → cheap | granite4:micro | claude-haiku-4-5 | JSON classification, 6 intents — templated; haiku is overkill |
+| `icp_scout` (search + format) | upfront → cheap | granite4:micro | claude-haiku-4-5 | SerpAPI results → company table: structured extraction, not judgment |
+| `outreach` (cold email) | **cascade** | granite4:micro first | claude-opus-4-8 if confidence < 0.93 | Cold email tone is quality-sensitive; cascade uses local for simple bumps, escalates for complex initial drafts |
+| `meeting_intel` (Deepthi) | upfront → cheap | granite4:micro | claude-haiku-4-5 | Meeting note parsing — templated extraction, well-scoped |
+| `deck_builder` (Arman) | upfront → strong | granite4:micro | claude-opus-4-8 | 7-slide narrative synthesis — local struggles with creative slide judgment |
 
-## Why not cascade?
+## Cascade implementation (outreach agent)
 
-Cascade (cheap → self-grade → escalate on low confidence) is the right choice
-when task difficulty is unknown at dispatch time. For deal-closah, the orchestrator
-already knows the task type before any model call — `intent=outreach` means we need
-strong tone quality, `intent=icp` means we need structured formatting. Upfront
-routing is 1 call cheaper per query and avoids calibrating a confidence threshold.
+```python
+# agents/outreach.py
+cheap = run_agent(task, ..., provider="local", tier="default")  # granite4:micro, $0
+confidence, _ = self_grade(task, cheap.text, provider="local")  # local grades itself
+if confidence < CASCADE_THRESHOLD:                                # default: 0.93
+    strong = run_agent(task, ..., tier="strong")                 # claude-opus-4-8 when key set
+```
 
-Cascade would improve the `outreach` agent for follow-up bumps (simple bumps don't
-need Opus). That's extension idea #1 for a second sprint.
+**Threshold calibration:** granite4:micro self-grades 0.90–1.00 on most tasks
+(documented in model-matchmakah benchmark). Setting threshold at 0.93 means:
+- Simple follow-up bumps (granite grades 0.94+) → stay local, $0.00
+- Complex initial cold emails requiring No-Dump Rule (granite grades 0.90–0.92) → escalate
+
+Override with `CASCADE_THRESHOLD=0.99` env var to force nearly all outreach to frontier.
+
+**Graceful degradation:** if the strong tier is unavailable (no API key, offline mode),
+the local answer is returned with a stderr note — never a crash.
 
 ## Measured (local only, offline, warm model)
 
