@@ -16,9 +16,14 @@ Commands:
 """
 
 import argparse
+import io
 import os
 import sys
 from pathlib import Path
+
+# Windows Unicode fix — model output can contain non-ASCII characters
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))

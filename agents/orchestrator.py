@@ -21,7 +21,7 @@ from typing import Optional
 HERE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HERE))
 
-from agentkit import chat
+from agentkit import chat_raw, resolve
 from schemas import Classification, Intent, SalesState, initial_state
 from agents import deck_builder, icp_scout, meeting_intel, outreach
 
@@ -48,14 +48,12 @@ def classify_intent(state: SalesState) -> SalesState:
     """Classify the user's intent from the task. Writes to state['classification']."""
     t0 = time.perf_counter()
     try:
-        result = chat(
-            messages=[
-                {"role": "system", "content": _CLASSIFY_SYSTEM},
-                {"role": "user", "content": state["task"]},
-            ],
-            response_format={"type": "json_object"},
-        )
-        c = Classification.model_validate_json(result.content)
+        messages = [
+            {"role": "system", "content": _CLASSIFY_SYSTEM},
+            {"role": "user", "content": state["task"]},
+        ]
+        _, result = chat_raw(messages, handle=resolve(), json_mode=True)
+        c = Classification.model_validate_json(result.text)
         state["classification"] = c.model_dump()
     except Exception as e:
         state["errors"].append(f"classify_intent: {e}")
