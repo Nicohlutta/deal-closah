@@ -10,5 +10,5 @@ dist/
 data/prospects/*.json
 data/outreach/*.json
 data/meetings/*.json
-data/decks/*.json
+data/decks/
 evals/**/outputs/
