@@ -446,6 +446,7 @@ async function runTask() {
           <p>${escapeHtml(error.message)}</p>
         </article>
       `;
+      return;
     }
   }
 
