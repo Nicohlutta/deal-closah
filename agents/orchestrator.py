@@ -21,6 +21,8 @@ from typing import Optional
 HERE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HERE))
 
+import re
+
 from agentkit import chat_raw, resolve
 from schemas import Classification, Intent, SalesState, initial_state
 from agents import deck_builder, icp_scout, meeting_intel, outreach
@@ -53,7 +55,9 @@ def classify_intent(state: SalesState) -> SalesState:
             {"role": "user", "content": state["task"]},
         ]
         _, result = chat_raw(messages, handle=resolve(), json_mode=True)
-        c = Classification.model_validate_json(result.text)
+        # Strip markdown code fences (Claude wraps JSON in ```json ... ``` without json_mode)
+        raw = re.sub(r"```(?:json)?\s*|\s*```", "", result.text).strip()
+        c = Classification.model_validate_json(raw)
         state["classification"] = c.model_dump()
     except Exception as e:
         state["errors"].append(f"classify_intent: {e}")

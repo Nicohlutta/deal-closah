@@ -164,7 +164,8 @@ def chat_raw(
     kwargs: dict = {"model": handle.model, "messages": messages, "temperature": temperature}
     if tools:
         kwargs["tools"] = tools
-    if json_mode:
+    # Anthropic's compat endpoint rejects json_object — Claude follows JSON system prompts natively
+    if json_mode and handle.provider != "anthropic":
         kwargs["response_format"] = {"type": "json_object"}
     t0 = time.perf_counter()
     try:
