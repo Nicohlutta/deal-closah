@@ -28,7 +28,7 @@ from interfaces import CompanyProfile, OutreachRecord
 # falls below this threshold. Cold email tone/quality is the sensitive dimension here.
 # granite4:micro self-grades 0.90–1.00 on most tasks, so set threshold above 0.92
 # to see real escalation on complex drafts. Override with CASCADE_THRESHOLD env var.
-_CASCADE_THRESHOLD = float(os.getenv("CASCADE_THRESHOLD", "0.93"))
+_CASCADE_THRESHOLD = float(os.getenv("CASCADE_THRESHOLD", "0.90"))
 
 SYSTEM = """You are an Outreach specialist — an expert sales development rep (SDR).
 You write personalized, concise outreach emails that lead with the prospect's
