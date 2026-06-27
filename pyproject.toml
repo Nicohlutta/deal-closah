@@ -5,6 +5,7 @@ description = "Sales & GTM multi-agent system — TOA Agent Build Day 2026"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
+    "fastapi>=0.115",
     "openai>=1.0",
     "pyyaml>=6.0",
     "requests>=2.31",
@@ -12,6 +13,7 @@ dependencies = [
     "beautifulsoup4>=4.12",
     "skills-ref>=0.1",
     "tqdm>=4.0",
+    "uvicorn>=0.30",
 ]
 
 [project.optional-dependencies]

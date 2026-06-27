@@ -1,20 +1,20 @@
 # deal-closah frontend
 
-Static frontend for the sales command center. It is intentionally dependency-free
-so the frontend can ship while backend and agent endpoints are still in progress.
+Frontend for the sales command center. The root `server.py` serves this UI and
+exposes `POST /api/run` for API mode.
 
 ## Run locally
 
 ```bash
-cd app
-python -m http.server 5173
+uv sync
+uv run python server.py --port 5173
 ```
 
 Open `http://localhost:5173`.
 
-## API contract target
+## API contract
 
-The UI already has an API mode that posts to:
+The UI API mode posts to:
 
 ```http
 POST /api/run
@@ -37,5 +37,6 @@ Expected response shape:
 }
 ```
 
-Until that endpoint exists, Offline mode uses mock data based on the repo's
-`CompanyProfile`, `OutreachRecord`, `MeetingNote`, and `PitchDeck` contracts.
+The server sets `AGENT_OFFLINE=1` by default so demos use fixtures and do not
+require live API keys. If the local model call takes more than 10 seconds, it
+returns a structured demo-safe fallback so the UI stays responsive.
